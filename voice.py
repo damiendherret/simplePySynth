@@ -19,8 +19,9 @@ class Voice:
     def note_off(self):
         with self.lock:
             if self.active:
-                self.state = 'release'
-                self.release_start_env = self.env
+                #self.state = 'release'
+                #self.release_start_env = self.env
+                self.active = False
 
     def is_active(self):
         with self.lock:
@@ -37,26 +38,26 @@ class Voice:
             waves = np.sin(phases)  # placeholder pour d'autres formes
 
         # enveloppe ADSR (simplifiée, linéaire)
-        env = np.zeros(nframes)
-        for i in range(nframes):
-            if self.state == 'attack':
-                self.env += (1.0 / max(1, int(self.attack * self.sample_rate)))
-                if self.env >= 1.0:
-                    self.env = 1.0
-                    self.state = 'decay'
-            elif self.state == 'decay':
-                self.env -= (1.0 - self.sustain) / max(1, int(self.decay * self.sample_rate))
-                if self.env <= self.sustain:
-                    self.env = self.sustain
-                    self.state = 'sustain'
-            elif self.state == 'sustain':
-                self.env = self.sustain
-            elif self.state == 'release':
-                self.env -= self.sustain / max(1, int(self.release * self.sample_rate))
-                if self.env <= 0.0:
-                    self.env = 0.0
-                    self.active = False
-            env[i] = self.env
+        #env = np.zeros(nframes)
+        #for i in range(nframes):
+        #    if self.state == 'attack':
+        #        self.env += (1.0 / max(1, int(self.attack * self.sample_rate)))
+        #        if self.env >= 1.0:
+        #            self.env = 1.0
+        #            self.state = 'decay'
+        #    elif self.state == 'decay':
+        #        self.env -= (1.0 - self.sustain) / max(1, int(self.decay * self.sample_rate))
+        #        if self.env <= self.sustain:
+        #            self.env = self.sustain
+        #            self.state = 'sustain'
+        #    elif self.state == 'sustain':
+        #        self.env = self.sustain
+        #    elif self.state == 'release':
+        #        self.env -= self.sustain / max(1, int(self.release * self.sample_rate))
+        #        if self.env <= 0.0:
+        #            self.env = 0.0
+        #            self.active = False
+        #    env[i] = self.env
 
         self.phase = phases[-1]  # mise à jour du phasor
-        return waves * env
+        return waves #* env

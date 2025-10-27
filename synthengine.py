@@ -15,6 +15,7 @@ class SynthEngine:
 
     def note_on(self, key, midi_note):
         if not (key in self.pressed_keys) : 
+            #print("New Key pressed:", key)
             freq = self.midi_key_to_freq(midi_note)
             with self.lock:
                 if len(self.voices) >= const.MAX_VOICES:
@@ -23,6 +24,8 @@ class SynthEngine:
                 v = Voice(freq)
                 self.voices.append(v)
                 self.pressed_keys.add(key)
+        #else:
+            #print("Key already pressed:", key)
                 
             
 
@@ -31,6 +34,7 @@ class SynthEngine:
         # ici on release toutes les voix actives (simplifié)
         with self.lock:
             if (key in self.pressed_keys) :
+                #print("Key Off:", key)
                 self.pressed_keys.remove(key) 
                 for v in self.voices:
                     if v.freq == self.midi_key_to_freq(midi_note):

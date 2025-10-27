@@ -1,6 +1,7 @@
 SAMPLE_RATE = 44100
-BLOCK_SIZE = 512  # nombre d'échantillons par callback
-MAX_VOICES = 16
+BLOCK_SIZE = 0  # nombre d'échantillons par callback
+MAX_VOICES = 4
+
 
 KEY_TO_MIDI = {
     'd': 60,  # C4

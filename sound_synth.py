@@ -1,13 +1,11 @@
 import numpy as np
 import sounddevice as sd
-from pynput import keyboard
 from voice import Voice
 from synthengine import SynthEngine
 import threading
 import const
 
-# Flag to control the program's execution
-running = True
+import keyboard
 
 def main():
     synth = SynthEngine()
@@ -27,49 +25,39 @@ def main():
                              samplerate=const.SAMPLE_RATE, blocksize=const.BLOCK_SIZE)
     stream.start()
 
-    # Listerner clavier (en thread séparé)
-    listener = keyboard.Listener(on_press=lambda k: on_press(k, synth),
-                                 on_release=lambda k: on_release(k, synth))
-    listener.start()
+
+    while True:
+        # Wait for the next event.
+        event = keyboard.read_event()
+        if event.event_type == keyboard.KEY_DOWN:
+            if event.name == 'esc':
+                print("Exiting...")
+                break
+            else:
+                on_press(event, synth)
+            #print(event.name, ' was pressed')
+        if event.event_type == keyboard.KEY_UP:
+            # print(event.name, ' was upped')
+            on_release(event, synth)
 
 
 
-
-
+def on_press(event, synth):
     try:
-        while True:
-            pass
-    except KeyboardInterrupt:
-        pass
-    finally:
-        listener.stop()
-        stream.stop()
-        stream.close()
-
-
-
-
-
-
-def on_press(key, synth):
-    try:
-        k = key.char
+        k = event.name
     except AttributeError:
         return
     if k in const.KEY_TO_MIDI:
         synth.note_on(k, const.KEY_TO_MIDI[k])
 
-def on_release(key, synth):
+def on_release(event, synth):
     try:
-        k = key.char
+        k = event.name
     except AttributeError:
         return
     if k in const.KEY_TO_MIDI:
         synth.note_off(k, const.KEY_TO_MIDI[k])
-    # Quit on Escape
-    if key == keyboard.Key.esc:
-        running = False
-        return False
+
 
 def my_function():
     print("Key pressed! Function executed.")
