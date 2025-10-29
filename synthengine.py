@@ -2,6 +2,7 @@ import threading
 from voice import Voice
 import numpy as np
 import const
+import LFO
 
 class SynthEngine:
 
@@ -12,6 +13,7 @@ class SynthEngine:
         self.voices = []
         self.lock = threading.Lock()
         self.pressed_keys = set()
+        self.LFO = LFO.LFO(freq=3.0, waveform='sine', factor= 0.4, sample_rate=const.SAMPLE_RATE)
 
     def note_on(self, key, midi_note):
         if not (key in self.pressed_keys) : 
@@ -41,7 +43,7 @@ class SynthEngine:
                         if v.is_active():
                             v.note_off()
                         else:
-                            voices.remove(v)
+                            self.voices.remove(v)
 
     def audio_callback(self, outdata, frames, time, status):
         if status:
@@ -56,5 +58,8 @@ class SynthEngine:
 
         # normalisation simple et écriture dans le buffer (mono vers stereo)
         mix = mix * 0.25  # ajustement du niveau
+
+        mix = mix * self.LFO.render(frames)
+
         out = np.expand_dims(mix, axis=1)
         outdata[:] = out
