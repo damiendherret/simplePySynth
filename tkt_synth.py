@@ -81,7 +81,7 @@ class SynthApp(customtkinter.CTk):
             text_color=const.GLOBAL_FONT_COLOR, font=(const.GLOBAL_FONT, 14, "bold"))
         self.lfo_label.grid(row=0, column=0, padx=5, pady=5, sticky="nw")
 
-        self.lfoOscShapeSelector = OscShapeSelector(self.lfo_frame)
+        self.lfoOscShapeSelector = OscShapeSelector(self.lfo_frame,command=self.updateLfoOscShape)
         self.lfoOscShapeSelector.grid(row=1, column=0, sticky="nw")
 
         self.lfoSegmented_button = customtkinter.CTkSegmentedButton(
@@ -180,6 +180,11 @@ class SynthApp(customtkinter.CTk):
     def updateMainOscShape(self):
         shape = self.mainOscShapeSelector.get()
         self.synth.waveform = shape
+        #print("Main Oscillator Shape set to:", shape)
+
+    def updateLfoOscShape(self):
+        shape = self.lfoOscShapeSelector.get()
+        self.synth.LFO.waveform = shape
         #print("Main Oscillator Shape set to:", shape)
 
     def updateHarmonics(self):

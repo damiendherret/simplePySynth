@@ -19,6 +19,8 @@ class LFO:
         phases = self.phase + phase_increment * t
         if self.waveform == 'Sine':
             waves = 0.5 + (0.5 * self.factor * np.sin(phases))
+        if self.waveform == 'Square':
+            waves = np.where(np.sin(phases) >= 0.0, self.factor, 0.0)
         else:
             waves = 0.5 + (0.5 * self.factor * np.sin(phases))  # placeholder pour d'autres formes
         self.phase = phases[-1]  # mise à jour du phasor

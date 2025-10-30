@@ -14,6 +14,8 @@ class Voice:
         self.lock = threading.Lock()
 
         self.harmonics = harmonics
+        self.phasors = [0.0 for _ in range(len(harmonics) + 1)]  # fundamental + harmonics
+
 
         self.attack, self.decay, self.sustain, self.release = adsr
         self.sample_rate = sample_rate
@@ -38,23 +40,24 @@ class Voice:
         phase_increments.append(phase_increment)  # fundamental
         
         for h in self.harmonics:
-            phase_increments.append(phase_increment * (h+2))  # harmonics start from H2
+            phase_increments.append(phase_increment * h)  # harmonics start from H2
 
         
         waves = np.zeros(nframes)
-
+        factor = 0.9/len(self.phasors)
 
         for i, phase_inc in enumerate(phase_increments):
-            phases = self.phase + phase_inc * t
+            phases = self.phasors[i] + phase_inc * t
             if self.waveform == 'Sine':
-                waves += 0.1 * np.sin(phases)
+                waves += factor * np.sin(phases)
             elif self.waveform == 'Square':
                 # carré simple : +1 pour la moitié positive, -1 pour la moitié négative
-                waves += 0.1 * np.where(np.sin(phases) >= 0.0, 1.0, -1.0)
+                waves += factor * np.where(np.sin(phases) >= 0.0, 1.0, -1.0)
             elif self.waveform == 'Saw':
-                waves += 0.1 * 2.0 * (np.mod(phases, 2.0 * np.pi) / (2.0 * np.pi)) - 1.0
+                waves += factor * 2.0 * (np.mod(phases, 2.0 * np.pi) / (2.0 * np.pi)) - 1.0
             else:
-                waves += 0.1 * np.sin(phases)  # placeholder pour d'autres formes
+                waves += factor * np.sin(phases)  # placeholder pour d'autres formes
+            self.phasors[i] = phases[-1]  # mise à jour du phasor
         
 
 
@@ -91,5 +94,5 @@ class Voice:
                     self.active = False
             env[i] = self.env
 
-        self.phase = phases[-1]  # mise à jour du phasor
+        #self.phase = phases[-1]  # mise à jour du phasor
         return waves * env
