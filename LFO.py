@@ -3,7 +3,7 @@ import numpy as np
 import const
 
 class LFO:
-    def __init__(self, freq, waveform='sine', factor=0.3, sample_rate=const.SAMPLE_RATE):
+    def __init__(self, freq, waveform='Sine', factor=0.5, sample_rate=const.SAMPLE_RATE):
         self.freq = freq
         self.phase = 0.0
         self.waveform = waveform
@@ -17,10 +17,19 @@ class LFO:
         # oscillateur simple (sine)
         phase_increment = 2 * np.pi * self.freq / self.sample_rate
         phases = self.phase + phase_increment * t
-        if self.waveform == 'sine':
+        if self.waveform == 'Sine':
             waves = 0.5 + (0.5 * self.factor * np.sin(phases))
         else:
             waves = 0.5 + (0.5 * self.factor * np.sin(phases))  # placeholder pour d'autres formes
         self.phase = phases[-1]  # mise à jour du phasor
 
         return waves
+    
+
+    def setfactor(self, factor):
+        with self.lock:
+            self.factor = factor
+
+    def setfreq(self, freq):
+        with self.lock:
+            self.freq = freq

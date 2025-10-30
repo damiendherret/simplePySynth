@@ -22,7 +22,7 @@ class SynthApp(customtkinter.CTk):
         # Initialize the main window
         super().__init__()
         self.title("Tkt SYNTH")
-        self.geometry("600x600")
+        self.geometry("600x500")
         self.configure(fg_color=const.BG_DARK)
         
         self.grid_columnconfigure((0,1), weight=1)
@@ -38,7 +38,8 @@ class SynthApp(customtkinter.CTk):
             text_color=const.GLOBAL_FONT_COLOR, font=(const.GLOBAL_FONT, 14, "bold"))
         self.osc_label.grid(row=0, column=0, padx=5, pady=5, sticky="nw")
 
-        self.mainOscShapeSelector = OscShapeSelector(self.osc_frame)
+        self.mainOscShapeSelector = OscShapeSelector(self.osc_frame,command=self.updateMainOscShape)
+        #self.mainOscShapeSelector.configure(command=self.updateMainOscShape)
         self.mainOscShapeSelector.grid(row=1, column=0, sticky="nw")
 
         # Harmonic Frame 
@@ -50,7 +51,7 @@ class SynthApp(customtkinter.CTk):
             text_color=const.GLOBAL_FONT_COLOR, font=(const.GLOBAL_FONT, 14, "bold"))
         self.harmonics_label.grid(row=0, column=0, padx=5, pady=5, sticky="nw", columnspan=2)
 
-        self.harmonicValues = ["H1", "H2", "H3", "H4", "H5", "H5"]
+        self.harmonicValues = ["H2", "H3", "H4", "H5", "H6", "H7"]
         self.harmonicCheckboxes = []
 
         j=0
@@ -61,7 +62,8 @@ class SynthApp(customtkinter.CTk):
                 text_color=const.GLOBAL_FONT_COLOR,
                 border_color=const.GLOBAL_LINE_COLOR,
                 hover_color=const.BG_FLASHY,
-                fg_color=const.BG_FLASHY
+                fg_color=const.BG_FLASHY,
+                command=self.updateHarmonics
             )
             checkbox.grid(row=j+1, column=i-(2*j), padx=2, pady=2, sticky="w")
             if (i+1) % 2 == 0:
@@ -105,8 +107,8 @@ class SynthApp(customtkinter.CTk):
                                          button_color=const.BG_FLASHY,
                                          button_hover_color=const.BG_FLASHY_PLUS,
                                          fg_color=const.GLOBAL_LINE_COLOR,
-                                         progress_color=const.BG_FLASHY
-                                         #, command=slider_event
+                                         progress_color=const.BG_FLASHY,
+                                         command=self.lfoFreqSliderMoved
                                          )
 
         self.lfo_speed_slider.grid(row=4, column=0, padx=10, pady=5, sticky="ew")
@@ -122,8 +124,8 @@ class SynthApp(customtkinter.CTk):
                                          button_color=const.BG_FLASHY,
                                          button_hover_color=const.BG_FLASHY_PLUS,
                                          fg_color=const.GLOBAL_LINE_COLOR,
-                                         progress_color=const.BG_FLASHY
-                                         #, command=slider_event
+                                         progress_color=const.BG_FLASHY, 
+                                         command=self.lfoMixSliderMoved
                                          )
 
         self.lfo_mix_slider.grid(row=6, column=0, padx=10, pady=5, sticky="ew")
@@ -165,6 +167,31 @@ class SynthApp(customtkinter.CTk):
             return
         if k in const.KEY_TO_MIDI:
             synth.note_off(k, const.KEY_TO_MIDI[k])
+
+
+    def lfoMixSliderMoved(self, value):
+        self.synth.LFO.setfactor(value / 100.0)
+
+    def lfoFreqSliderMoved(self, value):
+        # 0 = 0.1 Hz , 100 = 17 Hz
+        self.synth.LFO.setfreq(0.1 + value * (17 / 100.0))
+        #print("LFO Freq set to:", self.synth.LFO.freq)
+
+    def updateMainOscShape(self):
+        shape = self.mainOscShapeSelector.get()
+        self.synth.waveform = shape
+        #print("Main Oscillator Shape set to:", shape)
+
+    def updateHarmonics(self):
+        selected_harmonics = []
+        for i, checkbox in enumerate(self.harmonicCheckboxes):
+            if checkbox.get():
+                selected_harmonics.append(i + 2)  # +2 because harmonics start from H2
+        #print("Selected Harmonics:", selected_harmonics)
+        # Here you would update the synth engine to include these harmonics
+        # This is a placeholder for actual implementation
+        self.synth.harmonics = selected_harmonics
+
 
 
 

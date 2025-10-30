@@ -3,7 +3,7 @@ import const
 
 class OscShapeSelector(customtkinter.CTkFrame):
 
-    def __init__(self, master, default_value="Sine"):
+    def __init__(self, master, default_value="Sine", command=None):
         super().__init__(master)
         self.configure(fg_color=const.BG_FRAME)
         self.grid_columnconfigure(0, weight=1)
@@ -23,7 +23,8 @@ class OscShapeSelector(customtkinter.CTkFrame):
                                                     text_color=const.GLOBAL_FONT_COLOR,
                                                     border_color=const.GLOBAL_LINE_COLOR,
                                                     hover_color=const.BG_FLASHY,
-                                                    fg_color=const.BG_FLASHY)
+                                                    fg_color=const.BG_FLASHY,
+                                                    command=command)
             self.osc_radio_1.grid(row=i + 1, column=0, padx=10, sticky="w")
 
     def get(self):

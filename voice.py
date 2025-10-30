@@ -3,7 +3,7 @@ import numpy as np
 import const
 
 class Voice:
-    def __init__(self, freq, waveform='sine', adsr=(0.02, 0.05, 1, 0.5), sample_rate=const.SAMPLE_RATE):
+    def __init__(self, freq, waveform='Sine', adsr=(0.02, 0.05, 1, 0.5), sample_rate=const.SAMPLE_RATE, harmonics=[]):
         self.freq = freq
         self.phase = 0.0
         self.waveform = waveform
@@ -12,6 +12,8 @@ class Voice:
         self.state = 'attack'
         self.active = True
         self.lock = threading.Lock()
+
+        self.harmonics = harmonics
 
         self.attack, self.decay, self.sustain, self.release = adsr
         self.sample_rate = sample_rate
@@ -29,12 +31,43 @@ class Voice:
     def render(self, nframes):
         t = np.arange(nframes)
         # oscillateur simple (sine)
+        
+        phase_increments =[]
+        
         phase_increment = 2 * np.pi * self.freq / self.sample_rate
-        phases = self.phase + phase_increment * t
-        if self.waveform == 'sine':
-            waves = np.sin(phases)
-        else:
-            waves = np.sin(phases)  # placeholder pour d'autres formes
+        phase_increments.append(phase_increment)  # fundamental
+        
+        for h in self.harmonics:
+            phase_increments.append(phase_increment * (h+2))  # harmonics start from H2
+
+        
+        waves = np.zeros(nframes)
+
+
+        for i, phase_inc in enumerate(phase_increments):
+            phases = self.phase + phase_inc * t
+            if self.waveform == 'Sine':
+                waves += 0.1 * np.sin(phases)
+            elif self.waveform == 'Square':
+                # carré simple : +1 pour la moitié positive, -1 pour la moitié négative
+                waves += 0.1 * np.where(np.sin(phases) >= 0.0, 1.0, -1.0)
+            elif self.waveform == 'Saw':
+                waves += 0.1 * 2.0 * (np.mod(phases, 2.0 * np.pi) / (2.0 * np.pi)) - 1.0
+            else:
+                waves += 0.1 * np.sin(phases)  # placeholder pour d'autres formes
+        
+
+
+        # phases = self.phase + phase_increment * t
+        # if self.waveform == 'Sine':
+        #     waves = np.sin(phases)
+        # elif self.waveform == 'Square':
+        #     # carré simple : +1 pour la moitié positive, -1 pour la moitié négative
+        #     waves = np.where(np.sin(phases) >= 0.0, 1.0, -1.0)
+        # elif self.waveform == 'Saw':
+        #     waves = 2.0 * (np.mod(phases, 2.0 * np.pi) / (2.0 * np.pi)) - 1.0
+        # else:
+        #     waves = np.sin(phases)  # placeholder pour d'autres formes
 
         # enveloppe ADSR (simplifiée, linéaire)
         env = np.zeros(nframes)

@@ -13,7 +13,9 @@ class SynthEngine:
         self.voices = []
         self.lock = threading.Lock()
         self.pressed_keys = set()
-        self.LFO = LFO.LFO(freq=3.0, waveform='sine', factor= 0.4, sample_rate=const.SAMPLE_RATE)
+        self.waveform = 'Sine'
+        self.harmonics = []
+        self.LFO = LFO.LFO(freq=5.0, waveform='sine', factor= 0.4, sample_rate=const.SAMPLE_RATE)
 
     def note_on(self, key, midi_note):
         if not (key in self.pressed_keys) : 
@@ -23,7 +25,7 @@ class SynthEngine:
                 if len(self.voices) >= const.MAX_VOICES:
                     return
                 #print(f"Note ON: MIDI {midi_note}, freq {freq:.2f} Hz")
-                v = Voice(freq)
+                v = Voice(freq, waveform=self.waveform, harmonics=self.harmonics)
                 self.voices.append(v)
                 self.pressed_keys.add(key)
         #else:
