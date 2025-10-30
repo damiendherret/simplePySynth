@@ -57,7 +57,7 @@ class SynthEngine:
                 mix += v.render(frames)
 
         # normalisation simple et écriture dans le buffer (mono vers stereo)
-        mix = mix * 0.25  # ajustement du niveau
+        mix = mix * 0.5  # ajustement du niveau
 
         mix = mix * self.LFO.render(frames)
 
