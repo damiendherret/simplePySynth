@@ -3,6 +3,7 @@ from voice import Voice
 import numpy as np
 import const
 import LFO
+import math
 
 class SynthEngine:
 
@@ -16,6 +17,13 @@ class SynthEngine:
         self.waveform = 'Sine'
         self.harmonics = []
         self.LFO = LFO.LFO(freq=5.0, waveform='sine', factor= 0.4, sample_rate=const.SAMPLE_RATE)
+
+         # --- lowpass filter state ---
+        self.sample_rate = const.SAMPLE_RATE
+        self.lp_cutoff = 1200.0  # cutoff initial (Hz)
+        self.lp_alpha = 1.0 - math.exp(-2.0 * math.pi * self.lp_cutoff / self.sample_rate)
+        self.lp_state = 0.0  # valeur de sortie précédente (persistante)
+
 
     def note_on(self, key, midi_note):
         if not (key in self.pressed_keys) : 
@@ -60,8 +68,24 @@ class SynthEngine:
 
         # normalisation simple et écriture dans le buffer (mono vers stereo)
         mix = mix * 0.7  # ajustement du niveau
-
         mix = mix * self.LFO.render(frames)
+
+
+        # --- LPF applied to avoid clics ---
+        #print(self.lp_alpha)
+        lpf_actiuvate = True
+        if lpf_actiuvate:
+            if self.lp_alpha > 0.0:
+                y = np.empty_like(mix)
+                # premier échantillon en tenant compte de lp_state
+                if frames > 0:
+                    y[0] = self.lp_state + self.lp_alpha * (mix[0] - self.lp_state)
+                    for i in range(1, frames):
+                        y[i] = y[i-1] + self.lp_alpha * (mix[i] - y[i-1])
+                    self.lp_state = y[-1]  # sauvegarde de l'état pour le prochain callback
+                else:
+                    y = mix
+                mix = y
 
         out = np.expand_dims(mix, axis=1)
         outdata[:] = out
