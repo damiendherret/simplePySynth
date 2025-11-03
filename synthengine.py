@@ -17,6 +17,7 @@ class SynthEngine:
         self.waveform = 'Sine'
         self.harmonics = []
         self.LFO = LFO.LFO(freq=5.0, waveform='sine', factor= 0.4, sample_rate=const.SAMPLE_RATE)
+        self.LFOTarget = 'Amp'  # 'Amp' or 'Pitch'
 
          # --- lowpass filter state ---
         self.sample_rate = const.SAMPLE_RATE
@@ -61,20 +62,25 @@ class SynthEngine:
             pass
         # mélanger toutes les voix actives
         mix = np.zeros(frames)
+
+        #lfo compute
+        self.LFO.render(frames)
+
         with self.lock:
             self.voices = [v for v in self.voices if v.is_active()]
             for v in self.voices:
                 mix += v.render(frames)
 
         # normalisation simple et écriture dans le buffer (mono vers stereo)
-        mix = mix * 0.7  # ajustement du niveau
-        mix = mix * self.LFO.render(frames)
+        mix = mix * 0.5  # ajustement du niveau
+        if self.LFOTarget == 'Amp':
+            mix = mix * self.LFO.frames  # application du LFO
 
 
         # --- LPF applied to avoid clics ---
         #print(self.lp_alpha)
-        lpf_actiuvate = True
-        if lpf_actiuvate:
+        lpf_activate = True
+        if lpf_activate:
             if self.lp_alpha > 0.0:
                 y = np.empty_like(mix)
                 # premier échantillon en tenant compte de lp_state

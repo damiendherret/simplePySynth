@@ -91,7 +91,7 @@ class SynthApp(customtkinter.CTk):
             unselected_color = const.GLOBAL_LINE_COLOR,
             fg_color = const.GLOBAL_LINE_COLOR,
             selected_hover_color = const.BG_FLASHY,
-            #,command=segmented_button_callback
+            command=self.LFOTargetChanged
             )
         self.lfoSegmented_button.set("Amp")
         self.lfoSegmented_button.grid(row=2, column=0, padx=10, pady=10, sticky="ew")
@@ -111,7 +111,7 @@ class SynthApp(customtkinter.CTk):
                                          command=self.lfoFreqSliderMoved
                                          )
 
-        self.lfo_speed_slider.grid(row=4, column=0, padx=10, pady=5, sticky="ew")
+        self.lfo_speed_slider.grid(row=4, column=0, padx=10, pady=(0,7), sticky="ew")
 
         self.lfo_mix_label = customtkinter.CTkLabel(
             self.lfo_frame, text="Mix : ", fg_color="transparent", 
@@ -128,7 +128,7 @@ class SynthApp(customtkinter.CTk):
                                          command=self.lfoMixSliderMoved
                                          )
 
-        self.lfo_mix_slider.grid(row=6, column=0, padx=10, pady=5, sticky="ew")
+        self.lfo_mix_slider.grid(row=6, column=0, padx=10, pady=(0,7), sticky="ew")
 
         # Man Frame
         self.man_frame = customtkinter.CTkFrame(self,fg_color=const.BG_FRAME)
@@ -185,7 +185,7 @@ class SynthApp(customtkinter.CTk):
     def updateLfoOscShape(self):
         shape = self.lfoOscShapeSelector.get()
         self.synth.LFO.waveform = shape
-        #print("Main Oscillator Shape set to:", shape)
+        #print("LFO Oscillator Shape set to:", shape)
 
     def updateHarmonics(self):
         selected_harmonics = []
@@ -197,7 +197,11 @@ class SynthApp(customtkinter.CTk):
         # This is a placeholder for actual implementation
         self.synth.harmonics = selected_harmonics
 
-
+    def LFOTargetChanged(self, value):
+        #print("LFO Target changed to:", value)
+        # Here you would update the synth engine to change the LFO target
+        # This is a placeholder for actual implementation
+        self.synth.LFOTarget = value
 
 
 def main():

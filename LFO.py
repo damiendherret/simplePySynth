@@ -10,6 +10,7 @@ class LFO:
         self.lock = threading.Lock()
         self.factor = factor
         self.sample_rate = sample_rate
+        self.frames = []
         
 
     def render(self, nframes):
@@ -25,7 +26,8 @@ class LFO:
             waves = 0.5 + (0.5 * self.factor * np.sin(phases))  # placeholder pour d'autres formes
         self.phase = phases[-1]  # mise à jour du phasor
 
-        return waves
+        self.frames = waves
+
     
 
     def setfactor(self, factor):
