@@ -1,7 +1,8 @@
 import tkinter as tk
 import customtkinter
 import const
-import sounddevice as sd
+#import sounddevice as sd
+import pyaudio
 from synthengine import SynthEngine
 from OscShapeSelector import OscShapeSelector
 
@@ -11,13 +12,19 @@ class SynthApp(customtkinter.CTk):
         
         
         # Initialize SynthEngine and audio stream
+
         self.synth = SynthEngine()
-        self.stream = sd.OutputStream(
-            channels=1, 
-            callback=self.synth.audio_callback,
-            samplerate=const.SAMPLE_RATE, 
-            blocksize=const.BLOCK_SIZE)
-        self.stream.start()
+
+        self.pya = pyaudio.PyAudio()
+        self.stream = self.pya.open(
+            format=pyaudio.paFloat32,
+            channels=1,
+            rate=const.SAMPLE_RATE,
+            frames_per_buffer=const.BLOCK_SIZE,
+            output=True,
+            stream_callback=self.synth.audio_callback
+        )
+        self.stream.start_stream()
 
         # Initialize the main window
         super().__init__()
@@ -146,6 +153,19 @@ class SynthApp(customtkinter.CTk):
         # Keyboard bind
         self.bind('<KeyPress>', lambda event:self.key_press(event, self.synth))
         self.bind('<KeyRelease>', lambda event:self.key_released(event, self.synth) )
+
+        # ensure proper cleanup when window closed
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def on_close(self):
+        try:
+            if self.stream.is_active():
+                self.stream.stop_stream()
+            self.stream.close()
+            self.pya.terminate()
+        except Exception:
+            pass
+        self.destroy()
 
     def button_callback(self):
         print("button pressed")
