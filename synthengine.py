@@ -4,6 +4,7 @@ import numpy as np
 import const
 import LFO
 import math
+import pyaudio
 
 class SynthEngine:
 
@@ -56,42 +57,45 @@ class SynthEngine:
                         else:
                             self.voices.remove(v)
 
-    def audio_callback(self, outdata, frames, time, status):
-        if status:
-            # print('Status:', status)
-            pass
-        # mélanger toutes les voix actives
-        mix = np.zeros(frames)
+    def audio_callback(self, in_data, frame_count, time_info, status):
+        
+        try:
+            frames = frame_count
+            mix = np.zeros(frames)
 
-        #lfo compute
-        self.LFO.render(frames)
+            #lfo compute
+            self.LFO.render(frames)
 
-        with self.lock:
-            self.voices = [v for v in self.voices if v.is_active()]
-            for v in self.voices:
-                mix += v.render(frames)
+            with self.lock:
+                self.voices = [v for v in self.voices if v.is_active()]
+                for v in self.voices:
+                    mix += v.render(frames)
 
-        # normalisation simple et écriture dans le buffer (mono vers stereo)
-        mix = mix * 0.5  # ajustement du niveau
-        if self.LFOTarget == 'Amp':
-            mix = mix * self.LFO.frames  # application du LFO
+            # normalisation simple et écriture dans le buffer (mono vers stereo)
+            mix = mix * 0.5  # ajustement du niveau
+            if self.LFOTarget == 'Amp':
+                mix = mix * self.LFO.frames  # application du LFO
 
 
-        # --- LPF applied to avoid clics ---
-        #print(self.lp_alpha)
-        lpf_activate = True
-        if lpf_activate:
-            if self.lp_alpha > 0.0:
-                y = np.empty_like(mix)
-                # premier échantillon en tenant compte de lp_state
-                if frames > 0:
-                    y[0] = self.lp_state + self.lp_alpha * (mix[0] - self.lp_state)
-                    for i in range(1, frames):
-                        y[i] = y[i-1] + self.lp_alpha * (mix[i] - y[i-1])
-                    self.lp_state = y[-1]  # sauvegarde de l'état pour le prochain callback
-                else:
-                    y = mix
-                mix = y
+            # --- LPF applied to avoid clics ---
+            #print(self.lp_alpha)
+            lpf_activate = True
+            if lpf_activate:
+                if self.lp_alpha > 0.0:
+                    y = np.empty_like(mix)
+                    # premier échantillon en tenant compte de lp_state
+                    if frames > 0:
+                        y[0] = self.lp_state + self.lp_alpha * (mix[0] - self.lp_state)
+                        for i in range(1, frames):
+                            y[i] = y[i-1] + self.lp_alpha * (mix[i] - y[i-1])
+                        self.lp_state = y[-1]  # sauvegarde de l'état pour le prochain callback
+                    else:
+                        y = mix
+                    mix = y
 
-        out = np.expand_dims(mix, axis=1)
-        outdata[:] = out
+            out_bytes = mix.astype(np.float32).tobytes()
+        except Exception:
+            # on error return silence for this callback
+            out_bytes = (np.zeros(frame_count, dtype=np.float32)).tobytes()
+
+        return (out_bytes, pyaudio.paContinue)

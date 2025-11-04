@@ -1,7 +1,6 @@
-import tkinter as tk
 import customtkinter
 import const
-import sounddevice as sd
+import pyaudio
 from synthengine import SynthEngine
 from OscShapeSelector import OscShapeSelector
 
@@ -9,15 +8,19 @@ from OscShapeSelector import OscShapeSelector
 class SynthApp(customtkinter.CTk):
     def __init__(self):
         
-        
         # Initialize SynthEngine and audio stream
         self.synth = SynthEngine()
-        self.stream = sd.OutputStream(
-            channels=1, 
-            callback=self.synth.audio_callback,
-            samplerate=const.SAMPLE_RATE, 
-            blocksize=const.BLOCK_SIZE)
-        self.stream.start()
+
+        self.pya = pyaudio.PyAudio()
+        self.stream = self.pya.open(
+            format=pyaudio.paFloat32,
+            channels=1,
+            rate=const.SAMPLE_RATE,
+            frames_per_buffer=const.BLOCK_SIZE,
+            output=True,
+            stream_callback=self.synth.audio_callback
+        )
+        self.stream.start_stream()
 
         # Initialize the main window
         super().__init__()
@@ -27,7 +30,6 @@ class SynthApp(customtkinter.CTk):
         
         self.grid_columnconfigure((0,1), weight=1)
         self.grid_rowconfigure((0,1,2), weight=1)
-        #self.grid_rowconfigure(2, weight=2)
 
         # OSC Frame 
         self.osc_frame = customtkinter.CTkFrame(self,fg_color=const.BG_FRAME)
@@ -39,7 +41,6 @@ class SynthApp(customtkinter.CTk):
         self.osc_label.grid(row=0, column=0, padx=5, pady=5, sticky="nw")
 
         self.mainOscShapeSelector = OscShapeSelector(self.osc_frame,command=self.updateMainOscShape)
-        #self.mainOscShapeSelector.configure(command=self.updateMainOscShape)
         self.mainOscShapeSelector.grid(row=1, column=0, sticky="nw")
 
         # Harmonic Frame 
@@ -147,6 +148,19 @@ class SynthApp(customtkinter.CTk):
         self.bind('<KeyPress>', lambda event:self.key_press(event, self.synth))
         self.bind('<KeyRelease>', lambda event:self.key_released(event, self.synth) )
 
+        # ensure proper cleanup when window closed
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def on_close(self):
+        try:
+            if self.stream.is_active():
+                self.stream.stop_stream()
+            self.stream.close()
+            self.pya.terminate()
+        except Exception:
+            pass
+        self.destroy()
+
     def button_callback(self):
         print("button pressed")
 
@@ -193,14 +207,10 @@ class SynthApp(customtkinter.CTk):
             if checkbox.get():
                 selected_harmonics.append(i + 2)  # +2 because harmonics start from H2
         #print("Selected Harmonics:", selected_harmonics)
-        # Here you would update the synth engine to include these harmonics
-        # This is a placeholder for actual implementation
         self.synth.harmonics = selected_harmonics
 
     def LFOTargetChanged(self, value):
         #print("LFO Target changed to:", value)
-        # Here you would update the synth engine to change the LFO target
-        # This is a placeholder for actual implementation
         self.synth.LFOTarget = value
 
 
