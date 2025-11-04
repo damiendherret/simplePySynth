@@ -1,7 +1,5 @@
-import tkinter as tk
 import customtkinter
 import const
-#import sounddevice as sd
 import pyaudio
 from synthengine import SynthEngine
 from OscShapeSelector import OscShapeSelector
@@ -10,9 +8,7 @@ from OscShapeSelector import OscShapeSelector
 class SynthApp(customtkinter.CTk):
     def __init__(self):
         
-        
         # Initialize SynthEngine and audio stream
-
         self.synth = SynthEngine()
 
         self.pya = pyaudio.PyAudio()
@@ -34,7 +30,6 @@ class SynthApp(customtkinter.CTk):
         
         self.grid_columnconfigure((0,1), weight=1)
         self.grid_rowconfigure((0,1,2), weight=1)
-        #self.grid_rowconfigure(2, weight=2)
 
         # OSC Frame 
         self.osc_frame = customtkinter.CTkFrame(self,fg_color=const.BG_FRAME)
@@ -46,7 +41,6 @@ class SynthApp(customtkinter.CTk):
         self.osc_label.grid(row=0, column=0, padx=5, pady=5, sticky="nw")
 
         self.mainOscShapeSelector = OscShapeSelector(self.osc_frame,command=self.updateMainOscShape)
-        #self.mainOscShapeSelector.configure(command=self.updateMainOscShape)
         self.mainOscShapeSelector.grid(row=1, column=0, sticky="nw")
 
         # Harmonic Frame 
@@ -213,14 +207,10 @@ class SynthApp(customtkinter.CTk):
             if checkbox.get():
                 selected_harmonics.append(i + 2)  # +2 because harmonics start from H2
         #print("Selected Harmonics:", selected_harmonics)
-        # Here you would update the synth engine to include these harmonics
-        # This is a placeholder for actual implementation
         self.synth.harmonics = selected_harmonics
 
     def LFOTargetChanged(self, value):
         #print("LFO Target changed to:", value)
-        # Here you would update the synth engine to change the LFO target
-        # This is a placeholder for actual implementation
         self.synth.LFOTarget = value
 
 
